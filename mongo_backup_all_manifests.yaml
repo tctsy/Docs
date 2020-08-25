@@ -45,8 +45,6 @@ metadata:
     app: skbn
   name: skbn-mongo-backup
   namespace: default
-  annotations:
-      iam.amazonaws.com/role: rancher-role
 spec:
   schedule: "10 3 * * *" # 3:10am
   failedJobsHistoryLimit: 2
