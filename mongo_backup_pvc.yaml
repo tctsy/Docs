@@ -2,6 +2,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: pvc-mongo-dmp
+  namespace: default
   labels:
     app: mongodb
 spec:
