@@ -1,4 +1,4 @@
-git.viasat.comapiVersion: v1
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
