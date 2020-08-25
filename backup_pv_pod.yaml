@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backup-pv-pod
+  labels:
+    app: backup-pv-pod
+spec:
+  volumes:
+  - name: mongo-dumps
+    persistentVolumeClaim:
+      claimName: pvc-mongo-dmp
+  containers:
+  - image: busybox
+    name: busybox
+    command: ["/bin/sh"]
+    args: ["-c","sleep 86400"]
+    volumeMounts:
+    - name: mongo-dumps
+      mountPath: /mongo-dumps

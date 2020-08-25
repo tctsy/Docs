@@ -1,0 +1,137 @@
+git.viasat.comapiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: skbn
+  name: skbn
+  namespace: default
+  # annotations:
+  #   iam.amazonaws.com/role: skbn
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: skbn
+  name: skbn
+  namespace: default
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: skbn
+  name: skbn
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: skbn
+subjects:
+- kind: ServiceAccount
+  name: skbn
+  namespace: default
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: skbn
+  name: skbn-mongo-backup
+  namespace: default
+  annotations:
+      iam.amazonaws.com/role: rancher-role
+spec:
+  schedule: "10 3 * * *" # 3:10am
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: skbn
+          # annotations:
+          #   iam.amazonaws.com/role: skbn # We are using kube2iam
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: skbn
+          containers:
+          - name: skbn
+            image: nuvo/skbn:latest
+            command: ["/bin/sh","-c"]
+            args: ["export BACKUP_NAME=vc-mongo-backup-`/bin/date +%d-%m-%Y-%T`.tar; skbn cp
+                   --src k8s://default/backup-pv-pod/busybox/mongo-dumps/mongodump.tar
+                   --dst s3://tctsy-dumps/$BACKUP_NAME"]
+
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: AWS_REGION
+              value: us-east-2
+            # Mount the shared persistent volume
+            volumeMounts:
+              - mountPath: /mongo-dumps
+                name: mongo-dumps
+          volumes:
+          - name: mongo-dumps
+            persistentVolumeClaim:
+              claimName: pvc-mongo-dmp
+          # EBS persistent storage only availabe in one zone
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                    - backup-pv-pod
+                topologyKey: kubernetes.io/hostname
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: mongodb-backup
+  namespace: default
+  labels:
+    app: mongo-dump
+spec:
+  schedule: "5 3 * * *" # 3:05 am
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  # backoffLimit: 2
+  # activeDeadlineSeconds: 100
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mongodump
+            image: mongo
+            command: ["/bin/sh","-c"]
+            args: ["mongodump --host rocketchat-mongodb:27017 -u 'root' -p '${#stage('Mongo Config')['outputs']['manifest']['data'][mongodbRootPassword]}' --oplog --gzip --archive=/mongo-dumps/mongodump.tar"]
+            volumeMounts:
+              - mountPath: /mongo-dumps
+                name: mongo-dumps
+          volumes:
+          - name: mongo-dumps
+            persistentVolumeClaim:
+              claimName: pvc-mongo-dmp
+          restartPolicy: OnFailure
+          # EBS persistent storage only availabe in one zone
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                    - backup-pv-pod
+                topologyKey: kubernetes.io/hostname
