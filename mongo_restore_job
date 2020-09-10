@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-restore
+  namespace: default
+  labels:
+    app: mongo-dump
+spec:
+  template:
+    spec:
+      containers:
+      - name: mongorestore
+        image: mongo
+        command: ["/bin/sh","-c"]
+        args: ["mongorestore --host tctsy-mongodb:27017 -u u -p p --archive=mongo-dumps/mongodump-restore.tar --gzip --drop --db rocketchat"]
+        volumeMounts:
+          - mountPath: /mongo-dumps
+            name: mongo-dumps
+      volumes:
+      - name: mongo-dumps
+        persistentVolumeClaim:
+          claimName: pvc-mongo-dmp
+      restartPolicy: OnFailure
+      # EBS persistent storage only availabe in one zone
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - backup-pv-pod
+            topologyKey: kubernetes.io/hostname
