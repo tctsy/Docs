@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: traefik
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+    - host: flostest.online
+      http:
+       paths:
+       - backend:
+           serviceName: traefik
+           servicePort: 80
+  tls:
+   - secretName: rc-tls # Cert must match the given host
+
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    meta.helm.sh/release-name: tctsy
+    meta.helm.sh/release-namespace: default
+  creationTimestamp: "2020-08-25T16:10:53Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/instance: tctsy
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rocketchat
+    helm.sh/chart: rocketchat-2.0.4
+  name: tctsy-rocketchat
+  namespace: default
+  resourceVersion: "2589445"
+  selfLink: /apis/extensions/v1beta1/namespaces/default/ingresses/tctsy-rocketchat
+  uid: 0f970c04-8dcb-4852-9cd6-a05462a2270a
+spec:
+  rules:
+  - host: flostest.online
+    http:
+      paths:
+      - backend:
+          serviceName: tctsy-rocketchat
+          servicePort: http
+        path: /
+  tls:
+  - hosts:
+    - flostest.online
+    secretName: rc-tls
+status:
+  loadBalancer: {}

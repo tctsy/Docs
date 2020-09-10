@@ -1,0 +1,54 @@
+# Run the two files in this order to restore mongodb from an archive in S3:
+#
+# kubectl create -f yamls/skbn-mongo-restore-job.yml
+# kubectl create -f yamls/mongo-restore-job.yml
+#
+# NOTE: you must first manually edit the src file at line 29 to reflect the actual archive name you want to restore.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: skbn
+  name: skbn-mongo-restore
+  namespace: messaging
+spec:
+  template:
+    metadata:
+      labels:
+        app: skbn
+      # annotations:
+      #   iam.amazonaws.com/role: skbn # We are using kube2iam
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: skbn
+      containers:
+      - name: skbn
+        image: nuvo/skbn
+        command: ["/bin/sh","-c"]
+        # src example: s3://ver-dev-universe-verandamongodumpbackup/vc-mongo-backup-17-09-2019-03:10:05.tar
+        args: ["skbn cp --src s3://vega-dev-messaging-mongobackups/something
+               --dst k8s://default/backup-pv-pod/busybox/mongo-dumps/mongodump-restore.tar"]
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: AWS_REGION
+          value: us-east-1
+        # Mount the shared persistent volume
+        volumeMounts:
+          - mountPath: /mongo-dumps
+            name: mongo-dumps
+      volumes:
+      - name: mongo-dumps
+        persistentVolumeClaim:
+          claimName: pvc-mongo-dmp
+      # EBS persistent storage only availabe in one zone
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - backup-pv-pod
+            topologyKey: kubernetes.io/hostname
