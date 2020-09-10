@@ -6,7 +6,6 @@ metadata:
   labels:
     app: mongodb
 spec:
-  storageClassName: release
   accessModes:
     - ReadWriteOnce
   resources:
