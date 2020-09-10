@@ -12,7 +12,7 @@ spec:
       - name: mongorestore
         image: mongo
         command: ["/bin/sh","-c"]
-        args: ["tar --no-same-owner --overwrite -xzvf mongo-dumps/mongodump-restore.tar.gz; mongorestore --host tctsy-mongodb:27017 -u root -p <mongodbRootPassword> --noIndexRestore --drop --nsFrom 'parties.*' --nsTo 'rocketchat.*' dump;"]
+        args: ["tar --no-same-owner --overwrite -xzvf mongo-dumps/mongodump-restore.tar.gz; mongorestore --host tctsy-mongodb:27017 -u 'root' -p '<mongodbRootPassword>' --noIndexRestore --drop --nsFrom 'parties.*' --nsTo 'rocketchat.*' dump;"]
         volumeMounts:
           - mountPath: /mongo-dumps
             name: mongo-dumps
