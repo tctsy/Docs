@@ -1,12 +1,6 @@
-# NOTE: After installing traefik for the first time, or if ever it gets rebuilt,
-# you must manually add the nlb dns (provided by AWS at creation time) 
-# to the Global Accelerator config in AWS.
 
-image: 
-  name: traefik
+image: traefik
 # imageTag: alpine # Alpine only needed for debug and ssh access
-log:
-  level: DEBUG
 debug:
     enabled: true
 accessLogs:
@@ -16,7 +10,7 @@ rbac:
     enabled: true 
 ssl: 
     enabled: true 
-    enforced: true
+    enforced: false
 service:
     annotations: 
         service.beta.kubernetes.io/aws-load-balancer-type: "nlb"

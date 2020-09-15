@@ -113,7 +113,7 @@ spec:
           - name: mongodump
             image: mongo
             command: ["/bin/sh","-c"]
-            args: ["mongodump --host rocketchat-mongodb:27017 -u 'root' -p '${#stage('Mongo Config')['outputs']['manifest']['data'][mongodbRootPassword]}' --oplog --gzip --archive=/mongo-dumps/mongodump.tar"]
+            args: ["mongodump --host rocketchat-mongodb:27017 -u 'root' -p '<root password>' --oplog --gzip --archive=/mongo-dumps/mongodump.tar"]
             volumeMounts:
               - mountPath: /mongo-dumps
                 name: mongo-dumps

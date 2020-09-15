@@ -1,8 +1,8 @@
 mongodb:
     enabled: true
-    mongodbRootPassword: <your root password>
+    mongodbRootPassword: <root password>
     mongodbUsername: tctsyadmin
-    mongodbPassword: <yourmongodb password>
+    mongodbPassword: <mongodb password>
     mongodbDatabase: rocketchat
     replicaSet:
         enabled: true
@@ -14,18 +14,11 @@ mongodb:
                 secondary: 1
                 arbiter: 1
 image:
-    tag:  2.4.11 # we will fill this out with our downgraded version
+    #tag:  2.4.11 # we will fill this out with our downgraded version
     imagePullPolicy: Always
+replicaCount: 1
 ingress:
     enabled: true
     annotations:
         kubernetes.io/ingress.class: 'traefik'
-    tls:
-        - secretName: rc-tls
-          hosts:
-              - flostest.online
-livenessProbe:
-    enabled: false
-readinessProbe:
-    enabled: false
-host: flostest.online
+host: tctsy.chat

@@ -11,7 +11,7 @@ metadata:
   labels:
     app: skbn
   name: skbn-mongo-restore
-  namespace: messaging
+  namespace: default
 spec:
   template:
     metadata:
@@ -27,12 +27,12 @@ spec:
         image: nuvo/skbn
         command: ["/bin/sh","-c"]
         # src example: s3://ver-dev-universe-verandamongodumpbackup/vc-mongo-backup-17-09-2019-03:10:05.tar
-        args: ["skbn cp --src s3://vega-dev-messaging-mongobackups/something
+        args: ["skbn cp --src s3://tctsy-dumps/mongodump-restore.tar.gz
                --dst k8s://default/backup-pv-pod/busybox/mongo-dumps/mongodump-restore.tar"]
         imagePullPolicy: IfNotPresent
         env:
         - name: AWS_REGION
-          value: us-east-1
+          value: us-east-2
         # Mount the shared persistent volume
         volumeMounts:
           - mountPath: /mongo-dumps
